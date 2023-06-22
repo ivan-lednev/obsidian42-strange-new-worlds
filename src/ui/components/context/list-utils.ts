@@ -40,7 +40,7 @@ export function getListBreadcrumbs(position: Pos, listItems: ListItemCache[]) {
 }
 
 function isTopLevelListItem(listItem: ListItemCache) {
-  return listItem.parent <= 0;
+  return listItem.parent < 0;
 }
 
 function getListItemIndexContaining(

@@ -1,60 +1,25 @@
-import {
-  HeadingCache,
-  LinkCache,
-  ListItemCache,
-  Pos,
-  SectionCache,
-} from "obsidian";
-import { doesPositionIncludeAnother, isSamePosition } from "./position-utils";
+import { HeadingCache, ListItemCache } from "obsidian";
+import { getTextAtPosition, isSamePosition } from "./position-utils";
 import { getHeadingBreadcrumbs } from "./heading-utils";
 import { getListBreadcrumbs } from "./list-utils";
-
-interface createContextTreeProps {
-  // todo: better naming. Separate metadata cache?
-  // todo: this is backlinks. Make it clear that this comes from target, and the other three from referrer
-  backlinks: LinkCache[];
-  fileContents: string;
-  listItems: ListItemCache[];
-  headings: HeadingCache[];
-  sections: SectionCache[];
-}
-
-interface WithListChildren {
-  sectionsWithLinks: SectionCache[];
-  childLists: ListContextTree[];
-}
-
-interface WithAnyChildren extends WithListChildren {
-  childHeadings: HeadingContextTree[];
-}
-
-interface FileContextTree extends WithAnyChildren {
-  fileName?: string;
-}
-
-interface HeadingContextTree extends WithAnyChildren {
-  headingCache: HeadingCache;
-}
-
-interface ListContextTree extends WithListChildren {
-  listItemCache: ListItemCache;
-}
-
-interface LinkContextTree {
-  headingCache: HeadingCache;
-  sectionsWithLinks: SectionCache[];
-  children: LinkContextTree[];
-  childLists: ListItemCache[];
-}
+import {
+  createContextTreeProps,
+  FileContextTree,
+  HeadingContextTree,
+  ListContextTree,
+  WithAnyChildren,
+  WithListChildren,
+} from "./types";
+import { getSectionContaining } from "./section-utils";
 
 export function createContextTree({
-  backlinks,
+  linksToTarget,
   fileContents,
   listItems = [],
   headings = [],
   sections = [],
 }: createContextTreeProps) {
-  const linksWithContext = backlinks.map((link) => {
+  const linksWithContext = linksToTarget.map((link) => {
     return {
       headingBreadcrumbs: getHeadingBreadcrumbs(link.position, headings),
       listBreadcrumbs: getListBreadcrumbs(link.position, listItems),
@@ -62,67 +27,104 @@ export function createContextTree({
     };
   });
 
-  const root: LinkContextTree = {
-    // todo: fix cast
-    headingCache: {} as HeadingCache,
-    childLists: [],
-    children: [],
-    sectionsWithLinks: [],
-  };
-
-  // const root: FileContextTree = {
-  //   sectionsWithLinks: [],
-  //   childLists: [],
-  //   childHeadings: [],
-  // };
+  const root = createFileContextTree();
 
   for (const {
-    headingBreadcrumbs: breadcrumbsListForHeading,
+    headingBreadcrumbs,
+    listBreadcrumbs,
     sectionCache,
   } of linksWithContext) {
     let context = root;
 
-    for (const breadcrumbsHeading of breadcrumbsListForHeading) {
-      if (
-        !isSamePosition(
-          context.headingCache?.position, // todo: fix chaining
-          breadcrumbsHeading.position
-        )
-      ) {
-        const headingFoundInChildren = context.children.find((headingTree) =>
-          isSamePosition(
-            headingTree.headingCache.position,
-            breadcrumbsHeading.position
-          )
-        );
+    for (const headingCache of headingBreadcrumbs) {
+      const headingFoundInChildren = context.childHeadings.find((tree) =>
+        isSamePosition(tree.headingCache.position, headingCache.position)
+      );
 
-        // move down one level
-        if (headingFoundInChildren) {
-          context = headingFoundInChildren;
-        } else {
-          // Need a new child
-          const newContext = {
-            headingCache: breadcrumbsHeading,
-            children: [], // todo: we can already push all the children here
-            sectionsWithLinks: [], // todo: section should get to this only if it's the last heading in the chain
-          };
-          context.children.push(newContext);
-          context = newContext;
-        }
+      if (headingFoundInChildren) {
+        context = headingFoundInChildren;
+      } else {
+        const newHeadingContext: HeadingContextTree =
+          createHeadingContextTree(headingCache);
+
+        context.childHeadings.push(newHeadingContext);
+        context = newHeadingContext;
       }
     }
 
-    context.sectionsWithLinks.push(sectionCache);
+    for (const listItemCache of listBreadcrumbs) {
+      const listItemFoundInChildren = context.childLists.find((tree) =>
+        isSamePosition(tree.listItemCache.position, listItemCache.position)
+      );
+
+      if (listItemFoundInChildren) {
+        context = listItemFoundInChildren;
+      } else {
+        const newListContext: ListContextTree =
+          createListContextTree(listItemCache);
+
+        context.childLists.push(newListContext);
+        context = newListContext;
+      }
+    }
+
+    context.sectionsWithMatches.push(sectionCache);
   }
 
-  return root;
+  return addTextToItems(root, fileContents);
 }
 
-function getSectionContaining(
-  searchedForPosition: Pos,
-  sections: SectionCache[]
-) {
-  return sections.find(({ position }) =>
-    doesPositionIncludeAnother(position, searchedForPosition)
-  );
+function addTextToItems(root: WithAnyChildren, fileContents: string) {
+  root.sectionsWithMatches.forEach((sectionCache) => {
+    sectionCache.asText = getTextAtPosition(
+      fileContents,
+      sectionCache.position
+    );
+  });
+
+  root.childLists.forEach((listContextTree) => {
+    listContextTree.listItemCache.asText = getTextAtPosition(
+      fileContents,
+      listContextTree.listItemCache.position
+    );
+
+    // @ts-ignore
+    addTextToItems(listContextTree, fileContents);
+  });
+
+  root.childHeadings?.forEach((headingContextTree) => {
+    addTextToItems(headingContextTree, fileContents);
+  });
+
+  return root
+}
+
+function walkContextTree(root: FileContextTree, visitor: () => void) {}
+
+function createFileContextTree(): FileContextTree {
+  return {
+    fileName: "foo",
+    sectionsWithMatches: [],
+    childLists: [],
+    childHeadings: [],
+  };
+}
+
+function createHeadingContextTree(
+  headingCache: HeadingCache
+): HeadingContextTree {
+  return {
+    headingCache,
+    sectionsWithMatches: [],
+    childHeadings: [], // todo: we can already push all the children here
+    childLists: [],
+  };
+}
+
+function createListContextTree(listItemCache: ListItemCache): ListContextTree {
+  return {
+    listItemCache,
+    sectionsWithMatches: [],
+    childLists: [],
+  };
 }

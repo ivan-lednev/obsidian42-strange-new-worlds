@@ -3,7 +3,7 @@ import { createContextTree } from "./create-context-tree";
 test("builds a tree with top-level links", () => {
   const fileContents = `[[target]]`;
 
-  const backlinks = [
+  const linksToTarget = [
     {
       position: {
         start: {
@@ -45,12 +45,12 @@ test("builds a tree with top-level links", () => {
 
   expect(
     createContextTree({
-      backlinks,
+      linksToTarget,
       fileContents,
       ...cache,
     })
   ).toMatchObject({
-    sectionsWithLinks: [
+    sectionsWithMatches: [
       {
         position: {
           start: {
@@ -59,7 +59,7 @@ test("builds a tree with top-level links", () => {
         },
       },
     ],
-    children: [],
+    childHeadings: [],
   });
 });
 
@@ -177,24 +177,24 @@ test("builds a tree with nested headings", () => {
 
   expect(
     createContextTree({
-      backlinks,
+      linksToTarget: backlinks,
       fileContents,
       ...cache,
     })
   ).toMatchObject({
-    sectionsWithLinks: [],
-    children: [
+    sectionsWithMatches: [],
+    childHeadings: [
       {
-        sectionsWithLinks: [],
+        sectionsWithMatches: [],
         headingCache: {
           heading: "H1",
         },
-        children: [
+        childHeadings: [
           {
             headingCache: {
               heading: "H2",
             },
-            sectionsWithLinks: [
+            sectionsWithMatches: [
               {
                 position: {
                   start: { offset: 11 },
@@ -214,7 +214,7 @@ test("builds a tree with nested lists", () => {
 		- [[target]]
 `;
 
-  const backlinks = [
+  const linksToTarget = [
     {
       position: {
         start: {
@@ -303,14 +303,17 @@ test("builds a tree with nested lists", () => {
 
   expect(
     createContextTree({
-      backlinks,
+      linksToTarget,
       fileContents,
       ...cache,
     })
   ).toMatchObject({
-    sectionsWithLinks: [],
-    childLists: [],
-    children: [], // todo: rename
+    childLists: [
+      {
+        listItemCache: { asText: "- l1" },
+        childLists: [{ listItemCache: { asText: "- l2" }, childLists: [] }],
+      },
+    ],
   });
 });
 
