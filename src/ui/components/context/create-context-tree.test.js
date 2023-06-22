@@ -52,11 +52,7 @@ test("builds a tree with top-level links", () => {
   ).toMatchObject({
     sectionsWithMatches: [
       {
-        position: {
-          start: {
-            offset: 0,
-          },
-        },
+        text: `[[target]]`,
       },
     ],
     childHeadings: [],
@@ -185,20 +181,14 @@ test("builds a tree with nested headings", () => {
     sectionsWithMatches: [],
     childHeadings: [
       {
+        text: "H1",
         sectionsWithMatches: [],
-        headingCache: {
-          heading: "H1",
-        },
         childHeadings: [
           {
-            headingCache: {
-              heading: "H2",
-            },
+            text: "H2",
             sectionsWithMatches: [
               {
-                position: {
-                  start: { offset: 11 },
-                },
+                text: "[[target]]",
               },
             ],
           },
@@ -310,8 +300,8 @@ test("builds a tree with nested lists", () => {
   ).toMatchObject({
     childLists: [
       {
-        listItemCache: { asText: "- l1" },
-        childLists: [{ listItemCache: { asText: "- l2" }, childLists: [] }],
+        text: "- l1",
+        childLists: [{ text: "- l2", childLists: [] }],
       },
     ],
   });

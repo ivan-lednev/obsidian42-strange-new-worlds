@@ -7,8 +7,6 @@ import {
   FileContextTree,
   HeadingContextTree,
   ListContextTree,
-  WithAnyChildren,
-  WithListChildren,
 } from "./types";
 import { getSectionContaining } from "./section-utils";
 
@@ -58,52 +56,32 @@ export function createContextTree({
       );
 
       if (listItemFoundInChildren) {
+        // @ts-ignore
         context = listItemFoundInChildren;
       } else {
-        const newListContext: ListContextTree =
-          createListContextTree(listItemCache);
+        const newListContext: ListContextTree = createListContextTree(
+          listItemCache,
+          getTextAtPosition(fileContents, listItemCache.position)
+        );
 
         context.childLists.push(newListContext);
+        // @ts-ignore
         context = newListContext;
       }
     }
 
-    context.sectionsWithMatches.push(sectionCache);
+    context.sectionsWithMatches.push({
+      cache: sectionCache,
+      text: getTextAtPosition(fileContents, sectionCache.position),
+    });
   }
 
-  return addTextToItems(root, fileContents);
+  return root;
 }
-
-function addTextToItems(root: WithAnyChildren, fileContents: string) {
-  root.sectionsWithMatches.forEach((sectionCache) => {
-    sectionCache.asText = getTextAtPosition(
-      fileContents,
-      sectionCache.position
-    );
-  });
-
-  root.childLists.forEach((listContextTree) => {
-    listContextTree.listItemCache.asText = getTextAtPosition(
-      fileContents,
-      listContextTree.listItemCache.position
-    );
-
-    // @ts-ignore
-    addTextToItems(listContextTree, fileContents);
-  });
-
-  root.childHeadings?.forEach((headingContextTree) => {
-    addTextToItems(headingContextTree, fileContents);
-  });
-
-  return root
-}
-
-function walkContextTree(root: FileContextTree, visitor: () => void) {}
 
 function createFileContextTree(): FileContextTree {
   return {
-    fileName: "foo",
+    text: "foo",
     sectionsWithMatches: [],
     childLists: [],
     childHeadings: [],
@@ -115,14 +93,19 @@ function createHeadingContextTree(
 ): HeadingContextTree {
   return {
     headingCache,
+    text: headingCache.heading,
     sectionsWithMatches: [],
     childHeadings: [], // todo: we can already push all the children here
     childLists: [],
   };
 }
 
-function createListContextTree(listItemCache: ListItemCache): ListContextTree {
+function createListContextTree(
+  listItemCache: ListItemCache,
+  text: string
+): ListContextTree {
   return {
+    text,
     listItemCache,
     sectionsWithMatches: [],
     childLists: [],

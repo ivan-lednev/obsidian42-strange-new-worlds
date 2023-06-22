@@ -10,8 +10,14 @@ export interface createContextTreeProps {
   sections: SectionCache[];
 }
 
+export interface SectionWithMatch {
+  text: string;
+  cache: SectionCache;
+}
+
 export interface WithListChildren {
-  sectionsWithMatches: SectionCache[];
+  text: string;
+  sectionsWithMatches: SectionWithMatch[];
   childLists: ListContextTree[];
 }
 
@@ -29,11 +35,4 @@ export interface HeadingContextTree extends WithAnyChildren {
 
 export interface ListContextTree extends WithListChildren {
   listItemCache: ListItemCache;
-}
-
-export interface LinkContextTree {
-  headingCache: HeadingCache;
-  sectionsWithLinks: SectionCache[];
-  children: LinkContextTree[];
-  childLists: ListItemCache[];
 }
