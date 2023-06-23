@@ -115,13 +115,14 @@ export function createContextTree({
       );
 
       context.sectionsWithMatches.push({
-        cache: sectionCache,
+        cache: sectionCache, // todo: don't need it here?
         text: getTextAtPosition(fileContents, {
           start: headings[headingIndexAtPosition].position.start,
           end: firstSectionUnderHeading.position.end,
         }),
       });
     } else {
+      // just get the containing section
       context.sectionsWithMatches.push({
         cache: sectionCache,
         text: getTextAtPosition(fileContents, sectionCache.position),
@@ -164,3 +165,4 @@ function createListContextTree(
     childLists: [],
   };
 }
+
