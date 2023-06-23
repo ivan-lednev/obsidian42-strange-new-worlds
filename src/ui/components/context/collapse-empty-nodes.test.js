@@ -5,6 +5,7 @@ test("collapse empty nodes with 2 leaves", () => {
     collapseEmptyNodes({
       text: "file",
       sectionsWithMatches: [],
+      childLists: [],
       childHeadings: [
         {
           text: "empty 1",

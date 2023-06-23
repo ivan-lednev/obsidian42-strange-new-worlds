@@ -1,17 +1,17 @@
-import { FileContextTree, HeadingContextTree } from "./types";
+import { FileContextTree, HeadingContextTree, ListContextTree } from "./types";
 
 export function collapseEmptyNodes(contextTree: FileContextTree) {
-  function recursive(
+  function recursiveHeadings(
     branch: HeadingContextTree,
     breadcrumbsFromParent?: string[]
   ): HeadingContextTree {
-    console.log({ breadcrumbsFromParent });
+    branch.childLists = branch?.childLists?.map((l) => recursiveLists(l));
 
     if (
       !branch?.sectionsWithMatches?.length &&
+      !branch?.childLists?.length &&
       branch?.childHeadings?.length === 1
     ) {
-      console.log("found empty node");
       if (breadcrumbsFromParent) {
         breadcrumbsFromParent.push(branch.text);
       }
@@ -19,10 +19,36 @@ export function collapseEmptyNodes(contextTree: FileContextTree) {
         ? breadcrumbsFromParent
         : [branch.text];
 
-      return recursive(branch.childHeadings[0], breadcrumbs);
+      return recursiveHeadings(branch.childHeadings[0], breadcrumbs);
     }
 
-    branch.childHeadings = branch.childHeadings.map((h) => recursive(h));
+    branch.childHeadings = branch.childHeadings.map((h) => recursiveHeadings(h));
+
+    // @ts-ignore
+    branch.breadcrumbs = breadcrumbsFromParent;
+
+    return branch;
+  }
+
+  function recursiveLists(
+    branch: ListContextTree,
+    breadcrumbsFromParent?: string[]
+  ): ListContextTree {
+    if (
+      !branch?.sectionsWithMatches?.length &&
+      branch?.childLists?.length === 1
+    ) {
+      if (breadcrumbsFromParent) {
+        breadcrumbsFromParent.push(branch.text);
+      }
+      const breadcrumbs = breadcrumbsFromParent
+        ? breadcrumbsFromParent
+        : [branch.text];
+
+      return recursiveLists(branch.childLists[0], breadcrumbs);
+    }
+
+    branch.childLists = branch?.childLists?.map((l) => recursiveLists(l));
 
     // @ts-ignore
     branch.breadcrumbs = breadcrumbsFromParent;
@@ -31,8 +57,10 @@ export function collapseEmptyNodes(contextTree: FileContextTree) {
   }
 
   contextTree.childHeadings = contextTree.childHeadings.map((h) =>
-    recursive(h)
+    recursiveHeadings(h)
   );
+
+  contextTree.childLists = contextTree.childLists.map((l) => recursiveLists(l));
 
   console.log(contextTree);
   return contextTree;
