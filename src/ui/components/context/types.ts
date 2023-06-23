@@ -5,6 +5,7 @@ export interface createContextTreeProps {
   // todo: this is backlinks. Make it clear that this comes from target, and the other three from referrer
   linksToTarget: LinkCache[];
   fileContents: string;
+  fileName?: string;
   listItems: ListItemCache[];
   headings: HeadingCache[];
   sections: SectionCache[];

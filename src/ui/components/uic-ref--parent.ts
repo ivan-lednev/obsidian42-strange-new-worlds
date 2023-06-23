@@ -42,7 +42,8 @@ export /**
  */
 const getUIC_SidePane = async (refType: string, realLink: string, key: string, filePath: string, lineNu: number): Promise<HTMLElement> =>{
     const sidepaneEL = createDiv();
-    sidepaneEL.addClass("snw-sidepane-container");   
+    console.log({refType, realLink, key, filePath, lineNu})
+    sidepaneEL.addClass("snw-sidepane-container");
     sidepaneEL.addClass("search-result-container");
     sidepaneEL.append( (await getUIC_Ref_Area(refType, realLink, key, filePath, lineNu, false)) )
 

@@ -62,6 +62,5 @@ export function collapseEmptyNodes(contextTree: FileContextTree) {
 
   contextTree.childLists = contextTree.childLists.map((l) => recursiveLists(l));
 
-  console.log(contextTree);
   return contextTree;
 }

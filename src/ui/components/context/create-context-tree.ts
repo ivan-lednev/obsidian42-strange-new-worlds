@@ -21,6 +21,7 @@ import { formatListWithDescendants } from "./formatting-utils";
 export function createContextTree({
   linksToTarget,
   fileContents,
+  fileName = "unnamed file",
   listItems = [],
   headings = [],
   sections = [],
@@ -34,7 +35,7 @@ export function createContextTree({
     };
   });
 
-  const root = createFileContextTree();
+  const root = createFileContextTree(fileName);
 
   for (const {
     headingBreadcrumbs,
@@ -60,7 +61,6 @@ export function createContextTree({
       }
     }
 
-    // todo: remove duplication
     for (const listItemCache of listBreadcrumbs) {
       const listItemFoundInChildren = context.childLists.find((tree) =>
         isSamePosition(tree.listItemCache.position, listItemCache.position)
@@ -80,8 +80,6 @@ export function createContextTree({
         context = newListContext;
       }
     }
-
-    // if we are in a list, push child list items
 
     const linkIsInsideSubList = listBreadcrumbs.length > 0;
     const headingIndexAtPosition = getHeadingIndexContaining(
@@ -122,7 +120,6 @@ export function createContextTree({
         }),
       });
     } else {
-      // just get the containing section
       context.sectionsWithMatches.push({
         cache: sectionCache,
         text: getTextAtPosition(fileContents, sectionCache.position),
@@ -133,9 +130,9 @@ export function createContextTree({
   return root;
 }
 
-function createFileContextTree(): FileContextTree {
+function createFileContextTree(name: string): FileContextTree {
   return {
-    text: "foo",
+    text: name,
     sectionsWithMatches: [],
     childLists: [],
     childHeadings: [],
@@ -165,4 +162,3 @@ function createListContextTree(
     childLists: [],
   };
 }
-
