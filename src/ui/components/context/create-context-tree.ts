@@ -1,14 +1,22 @@
 import { HeadingCache, ListItemCache } from "obsidian";
 import { getTextAtPosition, isSamePosition } from "./position-utils";
-import { getHeadingBreadcrumbs } from "./heading-utils";
-import { getListBreadcrumbs } from "./list-utils";
+import {
+  getHeadingBreadcrumbs,
+  getHeadingIndexContaining,
+} from "./heading-utils";
+import {
+  getListBreadcrumbs,
+  getListItemIndexContaining,
+  getListItemWithDescendants,
+} from "./list-utils";
 import {
   createContextTreeProps,
   FileContextTree,
   HeadingContextTree,
   ListContextTree,
 } from "./types";
-import { getSectionContaining } from "./section-utils";
+import { getFirstSectionUnder, getSectionContaining } from "./section-utils";
+import { formatListWithDescendants } from "./formatting-utils";
 
 export function createContextTree({
   linksToTarget,
@@ -22,6 +30,7 @@ export function createContextTree({
       headingBreadcrumbs: getHeadingBreadcrumbs(link.position, headings),
       listBreadcrumbs: getListBreadcrumbs(link.position, listItems),
       sectionCache: getSectionContaining(link.position, sections),
+      link,
     };
   });
 
@@ -31,6 +40,7 @@ export function createContextTree({
     headingBreadcrumbs,
     listBreadcrumbs,
     sectionCache,
+    link,
   } of linksWithContext) {
     let context = root;
 
@@ -50,6 +60,7 @@ export function createContextTree({
       }
     }
 
+    // todo: remove duplication
     for (const listItemCache of listBreadcrumbs) {
       const listItemFoundInChildren = context.childLists.find((tree) =>
         isSamePosition(tree.listItemCache.position, listItemCache.position)
@@ -70,10 +81,52 @@ export function createContextTree({
       }
     }
 
-    context.sectionsWithMatches.push({
-      cache: sectionCache,
-      text: getTextAtPosition(fileContents, sectionCache.position),
-    });
+    // if we are in a list, push child list items
+
+    const linkIsInsideSubList = listBreadcrumbs.length > 0;
+    const headingIndexAtPosition = getHeadingIndexContaining(
+      link.position,
+      headings
+    );
+    const linkIsInsideHeading = headingIndexAtPosition >= 0;
+
+    if (linkIsInsideSubList) {
+      const indexOfListItemContainingLink = getListItemIndexContaining(
+        link.position,
+        listItems
+      );
+      const listItemCacheWithDescendants = getListItemWithDescendants(
+        indexOfListItemContainingLink,
+        listItems
+      );
+      const text = formatListWithDescendants(
+        fileContents,
+        listItemCacheWithDescendants
+      );
+
+      context.sectionsWithMatches.push({
+        cache: sectionCache, // todo: we don't need it here
+        text,
+      });
+    } else if (linkIsInsideHeading) {
+      const firstSectionUnderHeading = getFirstSectionUnder(
+        link.position,
+        sections
+      );
+
+      context.sectionsWithMatches.push({
+        cache: sectionCache,
+        text: getTextAtPosition(fileContents, {
+          start: headings[headingIndexAtPosition].position.start,
+          end: firstSectionUnderHeading.position.end,
+        }),
+      });
+    } else {
+      context.sectionsWithMatches.push({
+        cache: sectionCache,
+        text: getTextAtPosition(fileContents, sectionCache.position),
+      });
+    }
   }
 
   return root;

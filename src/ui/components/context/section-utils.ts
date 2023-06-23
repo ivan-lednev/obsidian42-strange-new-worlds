@@ -9,3 +9,9 @@ export function getSectionContaining(
     doesPositionIncludeAnother(position, searchedForPosition)
   );
 }
+
+export function getFirstSectionUnder(position: Pos, sections: SectionCache[]) {
+  return sections.find(
+    (section) => section.position.start.line > position.start.line
+  );
+}

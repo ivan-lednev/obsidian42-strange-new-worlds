@@ -1,6 +1,6 @@
 import { HeadingCache, Pos } from "obsidian";
 
-function getHeadingIndexContaining(position: Pos, headings: HeadingCache[]) {
+export function getHeadingIndexContaining(position: Pos, headings: HeadingCache[]) {
   return headings.findIndex(
     (heading) => heading.position.start.line === position.start.line
   );

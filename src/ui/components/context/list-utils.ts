@@ -1,5 +1,23 @@
 import { ListItemCache, Pos } from "obsidian";
-import { doesPositionIncludeAnother } from "./position-utils";
+import { doesPositionIncludeAnother, isSamePosition } from "./position-utils";
+
+export function getListItemWithDescendants(
+  listItemIndex: number,
+  listItems: ListItemCache[]
+) {
+  const rootListItem = listItems[listItemIndex];
+  const listItemWithDescendants = [rootListItem];
+
+  for (let i = listItemIndex + 1; i < listItems.length; i++) {
+    const nextItem = listItems[i];
+    if (nextItem.parent < rootListItem.position.start.line) {
+      return listItemWithDescendants;
+    }
+    listItemWithDescendants.push(nextItem);
+  }
+
+  return listItemWithDescendants;
+}
 
 export function getListBreadcrumbs(position: Pos, listItems: ListItemCache[]) {
   const listBreadcrumbs: ListItemCache[] = [];
@@ -43,7 +61,7 @@ function isTopLevelListItem(listItem: ListItemCache) {
   return listItem.parent < 0;
 }
 
-function getListItemIndexContaining(
+export function getListItemIndexContaining(
   searchedForPosition: Pos,
   listItems: ListItemCache[]
 ) {
