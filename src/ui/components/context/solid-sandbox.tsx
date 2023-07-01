@@ -41,6 +41,7 @@ interface TitleProps {
 }
 
 function Title(props: TitleProps) {
+  // todo: clean this up. It can be shorter
   return (
     <Index each={props.breadcrumbs}>
       {(breadcrumb, i) => (
@@ -100,6 +101,8 @@ interface BranchProps {
 }
 
 function Branch(props: BranchProps) {
+  const [childrenShown, setChildrenShown] = createSignal(true);
+
   const breadcrumbs = props.contextTree.breadcrumbs
     ? [...props.contextTree.breadcrumbs, props.contextTree.text]
     : [props.contextTree.text];
@@ -107,24 +110,31 @@ function Branch(props: BranchProps) {
   return (
     <div class="tree-item search-result snw-ref-item-container">
       <div class="tree-item-self search-result-file-title is-clickable">
-        <div class="tree-item-icon collapse-icon">
+        <div
+          class={`tree-item-icon collapse-icon ${
+            childrenShown() ? "" : "is-collapsed"
+          }`}
+          onClick={() => setChildrenShown(!childrenShown())}
+        >
           <CollapseIcon />
         </div>
         <div class="tree-item-inner">
           <Title breadcrumbs={breadcrumbs} type={props.type} />
         </div>
       </div>
-      <div class="snw-tree-item-children">
-        <MatchSection
-          sectionsWithMatches={props.contextTree.sectionsWithMatches}
-        />
-        <For each={props.contextTree.childLists}>
-          {(list) => <Branch contextTree={list} type="list" />}
-        </For>
-        <For each={props.contextTree.childHeadings}>
-          {(list) => <Branch contextTree={list} type="heading" />}
-        </For>
-      </div>
+      <Show when={childrenShown()}>
+        <div class="snw-tree-item-children">
+          <MatchSection
+            sectionsWithMatches={props.contextTree.sectionsWithMatches}
+          />
+          <For each={props.contextTree.childLists}>
+            {(list) => <Branch contextTree={list} type="list" />}
+          </For>
+          <For each={props.contextTree.childHeadings}>
+            {(list) => <Branch contextTree={list} type="heading" />}
+          </For>
+        </div>
+      </Show>
     </div>
   );
 }
