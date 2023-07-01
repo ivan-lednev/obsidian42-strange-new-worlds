@@ -1,8 +1,20 @@
 import { createSignal, For, Index, Match, Show, Switch } from "solid-js";
 import { render } from "solid-js/web";
-import { AnyTree } from "../sandbox";
-import { FileContextTree, SectionWithMatch } from "./types";
+import {
+  FileContextTree,
+  HeadingContextTree,
+  ListContextTree,
+  SectionWithMatch,
+} from "./types";
 import { MarkdownRenderer } from "obsidian";
+
+export interface AnyTree {
+  breadcrumbs?: string[];
+  text: string;
+  sectionsWithMatches: SectionWithMatch[];
+  childLists?: ListContextTree[];
+  childHeadings?: HeadingContextTree[];
+}
 
 function CollapseIcon() {
   return (
