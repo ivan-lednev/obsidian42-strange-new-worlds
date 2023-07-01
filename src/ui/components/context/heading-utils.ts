@@ -1,6 +1,9 @@
 import { HeadingCache, Pos } from "obsidian";
 
-export function getHeadingIndexContaining(position: Pos, headings: HeadingCache[]) {
+export function getHeadingIndexContaining(
+  position: Pos,
+  headings: HeadingCache[]
+) {
   return headings.findIndex(
     (heading) => heading.position.start.line === position.start.line
   );
@@ -40,6 +43,7 @@ export function getHeadingBreadcrumbs(position: Pos, headings: HeadingCache[]) {
   const positionIsInsideHeading = headingIndexAtPosition >= 0;
 
   if (positionIsInsideHeading) {
+    headingBreadcrumbs.unshift(headings[headingIndexAtPosition]);
     collectAncestorHeadingsForHeadingAtIndex(headingIndexAtPosition);
     return headingBreadcrumbs;
   }

@@ -1,5 +1,5 @@
 import { createContextTree } from "./create-context-tree";
-import {collapseEmptyNodes} from "./collapse-empty-nodes";
+import { collapseEmptyNodes } from "./collapse-empty-nodes";
 
 test("builds a tree with top-level links", () => {
   const fileContents = `[[target]]`;
@@ -606,4 +606,3 @@ and this is the well`,
     ],
   });
 });
-

@@ -8,6 +8,7 @@ import {
   getListBreadcrumbs,
   getListItemIndexContaining,
   getListItemWithDescendants,
+  isPositionInList,
 } from "./list-utils";
 import {
   createContextTreeProps,
@@ -81,14 +82,14 @@ export function createContextTree({
       }
     }
 
-    const linkIsInsideSubList = listBreadcrumbs.length > 0;
+    // todo: move to util
     const headingIndexAtPosition = getHeadingIndexContaining(
       link.position,
       headings
     );
     const linkIsInsideHeading = headingIndexAtPosition >= 0;
 
-    if (linkIsInsideSubList) {
+    if (isPositionInList(link.position, listItems)) {
       const indexOfListItemContainingLink = getListItemIndexContaining(
         link.position,
         listItems
@@ -114,10 +115,10 @@ export function createContextTree({
 
       context.sectionsWithMatches.push({
         cache: sectionCache, // todo: don't need it here?
-        text: getTextAtPosition(fileContents, {
-          start: headings[headingIndexAtPosition].position.start,
-          end: firstSectionUnderHeading.position.end,
-        }),
+        text: getTextAtPosition(
+          fileContents,
+          firstSectionUnderHeading.position
+        ),
       });
     } else {
       context.sectionsWithMatches.push({

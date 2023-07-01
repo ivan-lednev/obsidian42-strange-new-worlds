@@ -1,5 +1,5 @@
 import { ListItemCache, Pos } from "obsidian";
-import { doesPositionIncludeAnother, isSamePosition } from "./position-utils";
+import { doesPositionIncludeAnother } from "./position-utils";
 
 export function getListItemWithDescendants(
   listItemIndex: number,
@@ -68,4 +68,8 @@ export function getListItemIndexContaining(
   return listItems.findIndex(({ position }) =>
     doesPositionIncludeAnother(position, searchedForPosition)
   );
+}
+
+export function isPositionInList(position: Pos, listItems: ListItemCache[]) {
+  return getListItemIndexContaining(position, listItems) >= 0;
 }
