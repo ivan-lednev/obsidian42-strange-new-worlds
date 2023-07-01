@@ -3,13 +3,9 @@ import process from "process";
 import fs from "fs";
 import builtins from "builtin-modules";
 import { ESLint } from "eslint";
+import {solidPlugin} from "esbuild-plugin-solid";
 
 const prod = (process.argv[2] === "production");
-
-const copyFiles = ()=> {
-  fs.copyFile("manifest.json", "build/manifest.json", (err) => {if(err) console.log(err)} );
-  fs.copyFile("src/styles.css", "build/styles.css", (err) => {if(err) console.log(err)} );
-}
 
 
 esbuild.build({
@@ -19,15 +15,14 @@ esbuild.build({
     watch: {
       onRebuild(error, result) {
         if(prod==="production") return true;
-        copyFiles();
       },
     },
     target: "es2018",
     logLevel: "info",
     sourcemap: prod ? false : "inline",
     treeShaking: true,
-    minify: true,
-    outdir: "build",
+    minify: false,
+    outdir: "./",
     external: [
       "obsidian",
       "electron",
@@ -39,12 +34,9 @@ esbuild.build({
       "@codemirror/view",
       ...builtins,
     ],
+  plugins: [solidPlugin()]
 }).then(result => {
-  copyFiles();
 }).catch(() => process.exit(1));
-
-
-copyFiles();
 
 
 // eslint won't slow down the build process, just runs after the build finishes
