@@ -7,9 +7,9 @@ import {
   SectionWithMatch,
 } from "../types";
 import { Branch } from "./branch";
-import { collapseEmptyNodes } from "../collapse-empty-nodes";
+import { collapseEmptyNodes } from "../collapse/collapse-empty-nodes";
 import { produce } from "immer";
-import { searchContextTree } from "../search-context-tree";
+import { searchContextTree } from "../search/search-context-tree";
 import { FilterProvider } from "./search-context";
 
 export interface AnyTree {

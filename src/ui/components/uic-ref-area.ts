@@ -6,16 +6,15 @@ import SNWPlugin from "src/main";
 import { Link } from "src/types";
 import { getUIC_Ref_Item } from "./uic-ref-item";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { getUIC_Ref_Title_Div } from "./uic-ref-title";
-import { createContextTree } from "./context/create-context-tree";
+import { createContextTree } from "./context/create/create-context-tree";
 import {
   FileContextTree,
   HeadingContextTree,
   ListContextTree,
   SectionWithMatch,
 } from "./context/types";
-import { chainBreadcrumbs } from "./context/formatting-utils";
-import { collapseEmptyNodes } from "./context/collapse-empty-nodes";
+import { collapseEmptyNodes } from "./context/collapse/collapse-empty-nodes";
+import {renderContextTree} from "./context/solid/tree"
 
 let thePlugin: SNWPlugin;
 
@@ -46,8 +45,6 @@ export function setPluginVariableUIC_RefArea(plugin: SNWPlugin) {
 //     return refAreaContainerEl;
 // }
 
-const text =
-  "This is the water, and this is the well. Drink full and descend. The horse is the white of the eye. And dark within\nThis is the water, and this is the well. Drink full and descend. The horse is the white of the eye. And dark within";
 const collapseIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg>`;
 
 const displayContextTreeForFile = (
@@ -71,7 +68,8 @@ const displayContextTreeBranch = (
     sectionsWithMatches: SectionWithMatch[];
     childLists?: ListContextTree[];
     childHeadings?: HeadingContextTree[];
-  }
+  },
+  type?: "list" | "heading"
 ) => {
   el.createDiv(
     {
@@ -87,11 +85,35 @@ const displayContextTreeBranch = (
         }
       );
 
-      const text = contextTree.breadcrumbs
-        ? chainBreadcrumbs([...contextTree.breadcrumbs, contextTree.text])
-        : contextTree.text;
+      const breadcrumbs = contextTree.breadcrumbs
+        ? [...contextTree.breadcrumbs, contextTree.text]
+        : [contextTree.text];
 
-      el.createDiv({ cls: "tree-item-inner", text });
+      el.createDiv({ cls: "tree-item-inner" }, (el) => {
+        if (type === "list") {
+          breadcrumbs
+            .map((listText) => listText.trim().replace(/^-\s+/, ""))
+            .forEach((b, i) => {
+              el.createDiv({ cls: "snw-breadcrumb-container" }, (el) => {
+                const token = i === 0 ? "•" : "↳";
+                el.createDiv({ text: token, cls: "snw-breadcrumb-token" });
+                el.createDiv({ text: b });
+              });
+            });
+        } else if (type === "heading") {
+          breadcrumbs.forEach((b, i) => {
+            el.createDiv({ cls: "snw-breadcrumb-container" }, (el) => {
+              const token = i === 0 ? "§" : "↳";
+              el.createDiv({ text: token, cls: "snw-breadcrumb-token" });
+              el.createDiv({ text: b });
+            });
+          });
+        } else {
+          breadcrumbs.forEach((b) => {
+            el.createDiv({ text: `🗋 ${b}` });
+          });
+        }
+      });
     }
   );
 
@@ -104,8 +126,8 @@ const displayContextTreeBranch = (
             const renderContainer = el.createDiv({
               cls: "search-result-file-match snw-ref-item-info",
               attr: {
-                uic: "uic"
-              }
+                uic: "uic",
+              },
             });
             await MarkdownRenderer.renderMarkdown(
               section.text,
@@ -119,11 +141,11 @@ const displayContextTreeBranch = (
     }
 
     contextTree.childLists?.forEach((list) =>
-      displayContextTreeBranch(el, list)
+      displayContextTreeBranch(el, list, "list")
     );
 
     contextTree.childHeadings?.forEach((heading) =>
-      displayContextTreeBranch(el, heading)
+      displayContextTreeBranch(el, heading, "heading")
     );
   });
 };
@@ -168,7 +190,9 @@ export const getUIC_Ref_Area = async (
           ...thePlugin.app.metadataCache.getFileCache(inlinkingFile),
         });
 
-        displayContextTreeForFile(el, contextTree);
+        // collapseEmptyNodes(contextTree);
+        renderContextTree(el, contextTree)
+        // displayContextTreeForFile(el, contextTree);
       }
     });
   });

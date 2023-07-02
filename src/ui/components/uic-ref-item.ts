@@ -6,8 +6,8 @@ import {
     formatHeadingBreadCrumbs,
     formatListBreadcrumbs,
     formatListWithDescendants,
-} from "./context/formatting-utils";
-import { getTextAtPosition } from "./context/position-utils";
+} from "./context/util/formatting-utils";
+import { getTextAtPosition } from "./context/util/position-utils";
 
 let thePlugin: SNWPlugin;
 

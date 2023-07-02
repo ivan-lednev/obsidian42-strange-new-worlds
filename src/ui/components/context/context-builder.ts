@@ -5,7 +5,7 @@ import {
     Pos,
     SectionCache,
 } from "obsidian";
-import { doesPositionIncludeAnother } from "./position-utils";
+import { doesPositionIncludeAnother } from "./util/position-utils";
 
 export class ContextBuilder {
     private readonly listItems: ListItemCache[];

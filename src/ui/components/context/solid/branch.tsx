@@ -1,9 +1,9 @@
 import { createSignal, For, Show } from "solid-js";
 import { SectionWithMatch } from "../types";
 import { MarkdownRenderer } from "obsidian";
-import { AnyTree } from "./solid-sandbox";
 import { CollapseIcon } from "./collapse-icon";
 import { Title } from "./title";
+import { AnyTree } from "./tree";
 import { useFilterContext } from "./search-context";
 
 interface MatchSectionProps {
@@ -11,6 +11,27 @@ interface MatchSectionProps {
 }
 
 function MatchSection(props: MatchSectionProps) {
+  const filter = useFilterContext();
+
+  const addHighlight = (text: string) => {
+    if (filter().length === 0) {
+      return text;
+    }
+
+    const filterStart = text.indexOf(filter());
+
+    if (filterStart === -1) {
+      return text;
+    }
+
+    const filterEnd = filterStart + filter().length;
+
+    const before = text.substring(0, filterStart);
+    const after = text.substring(filterEnd);
+
+    return `${before}==${filter()}==${after}`;
+  };
+
   return (
     <Show when={props.sectionsWithMatches.length > 0}>
       <div class="search-result-file-matches snw-ref-item-collection-items">
@@ -22,7 +43,7 @@ function MatchSection(props: MatchSectionProps) {
               class="search-result-file-match snw-ref-item-info"
               ref={async (el) =>
                 await MarkdownRenderer.renderMarkdown(
-                  section.text,
+                  addHighlight(section.text),
                   el,
                   "/",
                   // @ts-ignore
