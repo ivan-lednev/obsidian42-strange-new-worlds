@@ -29,9 +29,9 @@ export function createContextTree({
 }: createContextTreeProps) {
   const linksWithContext = linksToTarget.map((link) => {
     return {
-      headingBreadcrumbs: getHeadingBreadcrumbs(link.position, headings),
-      listBreadcrumbs: getListBreadcrumbs(link.position, listItems),
-      sectionCache: getSectionContaining(link.position, sections),
+      headingBreadcrumbs: getHeadingBreadcrumbs(link.reference.position, headings),
+      listBreadcrumbs: getListBreadcrumbs(link.reference.position, listItems),
+      sectionCache: getSectionContaining(link.reference.position, sections),
       link,
     };
   });
@@ -84,14 +84,14 @@ export function createContextTree({
 
     // todo: move to util
     const headingIndexAtPosition = getHeadingIndexContaining(
-      link.position,
+      link.reference.position,
       headings
     );
     const linkIsInsideHeading = headingIndexAtPosition >= 0;
 
-    if (isPositionInList(link.position, listItems)) {
+    if (isPositionInList(link.reference.position, listItems)) {
       const indexOfListItemContainingLink = getListItemIndexContaining(
-        link.position,
+        link.reference.position,
         listItems
       );
       const listItemCacheWithDescendants = getListItemWithDescendants(
@@ -109,7 +109,7 @@ export function createContextTree({
       });
     } else if (linkIsInsideHeading) {
       const firstSectionUnderHeading = getFirstSectionUnder(
-        link.position,
+        link.reference.position,
         sections
       );
 

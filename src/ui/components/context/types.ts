@@ -1,9 +1,10 @@
 import { HeadingCache, LinkCache, ListItemCache, SectionCache } from "obsidian";
+import {Link} from "../../../types";
 
 export interface createContextTreeProps {
   // todo: better naming. Separate metadata cache?
   // todo: this is backlinks. Make it clear that this comes from target, and the other three from referrer
-  linksToTarget: LinkCache[];
+  linksToTarget: Link[];
   fileContents: string;
   fileName?: string;
   listItems: ListItemCache[];

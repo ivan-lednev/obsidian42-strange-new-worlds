@@ -1,6 +1,6 @@
 //wrapper element for references area. shared between popover and sidepane
 
-import { MarkdownRenderer, setIcon } from "obsidian";
+import { MarkdownRenderer, setIcon, TFile } from "obsidian";
 import { getReferencesCache, getSnwAllLinksResolutions } from "src/indexer";
 import SNWPlugin from "src/main";
 import { Link } from "src/types";
@@ -64,47 +64,43 @@ export const mountContextTree = async (
   isHoverView: boolean,
   el: HTMLDivElement
 ) => {
-  // todo: don't use active file, use filepath
+  const { countOfRefs, linksToLoop, uniqueFileKeys, maxItemsToShow } =
+    await getIncomingLinks(refType, filePath, key);
 
-  const { countOfRefs, linksToLoop, uniqueFileKeys, maxItemsToShow } = await extracted(refType, filePath, key);
-  console.log({ countOfRefs, linksToLoop, uniqueFileKeys, maxItemsToShow })
-
-  const activeFile = thePlugin.app.workspace.getActiveFile();
-
-  const backlinks =
-    // @ts-ignore
-    thePlugin.app.metadataCache.getBacklinksForFile(activeFile)?.data;
-
-  for (const [path, linksToTarget] of Object.entries(backlinks)) {
-    const inlinkingFile = thePlugin.app.metadataCache.getFirstLinkpathDest(
-      path,
-      "/"
-    );
-
-    if (!inlinkingFile) {
-      continue;
+  const filesWithLinks = linksToLoop.reduce<{
+    [path: string]: { links: Link[]; file: TFile };
+  }>((acc, link) => {
+    const { path } = link.sourceFile;
+    if (path in acc) {
+      acc[path].links.push(link);
+    } else {
+      acc[path] = { file: link.sourceFile, links: [link] };
     }
+    return acc;
+  }, {});
 
-    const inlinkingFileContents = await thePlugin.app.vault.cachedRead(
-      inlinkingFile
-    );
+  for (const [path, { links, file }] of Object.entries(filesWithLinks)) {
+    // todo: use Promise.all
+    const resolvedFileContents = await thePlugin.app.vault.cachedRead(file);
+    const fileCache = thePlugin.app.metadataCache.getFileCache(file);
 
     // @ts-ignore
     const contextTree = createContextTree({
       fileName: path,
-      fileContents: inlinkingFileContents,
-      // @ts-ignore
-      linksToTarget,
-      ...thePlugin.app.metadataCache.getFileCache(inlinkingFile),
+      fileContents: resolvedFileContents,
+      linksToTarget: links,
+      ...fileCache,
     });
 
-    // collapseEmptyNodes(contextTree);
     renderContextTree(el, contextTree);
-    // displayContextTreeForFile(el, contextTree);
   }
 };
 
-async function extracted(linkType: string, filePath: string, key: string) {
+async function getIncomingLinks(
+  linkType: string,
+  filePath: string,
+  key: string
+) {
   let countOfRefs = 0;
   let linksToLoop: Link[] = null;
 
@@ -141,82 +137,6 @@ async function extracted(linkType: string, filePath: string, key: string) {
     maxItemsToShow = thePlugin.settings.maxFileCountToDisplay;
   return { countOfRefs, linksToLoop, uniqueFileKeys, maxItemsToShow };
 }
-
-/**
- * Creates a DIV for a colection of reference blocks to be displayed
- *
- * @param {string} refType
- * @param {string} key
- * @param {string} filePath
- * @return {*}  {Promise<{response: string, refCount: number}>}
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getRefAreaItems = async (
-  refType: string,
-  key: string,
-  filePath: string
-): Promise<{
-  response: HTMLElement;
-  refCount: number;
-}> => {
-  const { countOfRefs, linksToLoop, uniqueFileKeys, maxItemsToShow } =
-    await extracted(refType, filePath, key);
-
-  // todo: separate this from view code
-
-  const wrapperEl = createDiv();
-
-  for (let index = 0; index < maxItemsToShow; index++) {
-    const file_path = uniqueFileKeys[index];
-    const responseItemContainerEl = createDiv();
-    responseItemContainerEl.addClass("snw-ref-item-container");
-    responseItemContainerEl.addClass("tree-item");
-
-    wrapperEl.appendChild(responseItemContainerEl);
-
-    const refItemFileEl = createDiv();
-    refItemFileEl.addClass("snw-ref-item-file");
-    refItemFileEl.addClass("tree-item-self");
-    refItemFileEl.addClass("search-result-file-title");
-    refItemFileEl.addClass("is-clickable");
-    refItemFileEl.setAttribute("snw-data-line-number", "-1");
-    refItemFileEl.setAttribute(
-      "snw-data-file-name",
-      file_path.sourceFile.path.replace(".md", "")
-    );
-    refItemFileEl.setAttribute("data-href", file_path.sourceFile.path);
-    refItemFileEl.setAttribute("href", file_path.sourceFile.path);
-
-    const refItemFileIconEl = createDiv();
-    refItemFileIconEl.addClass("snw-ref-item-file-icon");
-    refItemFileIconEl.addClass("tree-item-icon");
-    refItemFileIconEl.addClass("collapse-icon");
-    setIcon(refItemFileIconEl, "file-box");
-
-    const refItemFileLabelEl = createDiv();
-    refItemFileLabelEl.addClass("snw-ref-item-file-label");
-    refItemFileLabelEl.addClass("tree-item-inner");
-    refItemFileLabelEl.innerText = file_path.sourceFile.basename;
-
-    refItemFileEl.append(refItemFileIconEl);
-    refItemFileEl.append(refItemFileLabelEl);
-
-    responseItemContainerEl.appendChild(refItemFileEl);
-
-    const refItemsCollectionE = createDiv();
-    refItemsCollectionE.addClass("snw-ref-item-collection-items");
-    refItemsCollectionE.addClass("search-result-file-matches");
-    responseItemContainerEl.appendChild(refItemsCollectionE);
-
-    for (const ref of linksToLoop) {
-      if (file_path.sourceFile.path === ref.sourceFile.path) {
-        refItemsCollectionE.appendChild(await getUIC_Ref_Item(ref));
-      }
-    }
-  }
-
-  return { response: wrapperEl, refCount: countOfRefs };
-};
 
 const sortRefCache = async (refCache: Link[]): Promise<Link[]> => {
   return refCache.sort((a, b) => {
