@@ -1,5 +1,5 @@
 import { HeadingContextTree, ListContextTree } from "../types";
-import {AnyTree} from "../solid/tree";
+import { AnyTree } from "../solid/tree";
 
 export function collapseEmptyNodes(contextTree: AnyTree) {
   function recursiveHeadings(
@@ -23,7 +23,9 @@ export function collapseEmptyNodes(contextTree: AnyTree) {
       return recursiveHeadings(branch.childHeadings[0], breadcrumbs);
     }
 
-    branch.childHeadings = branch.childHeadings.map((h) => recursiveHeadings(h));
+    branch.childHeadings = branch.childHeadings.map((h) =>
+      recursiveHeadings(h)
+    );
 
     // @ts-ignore
     branch.breadcrumbs = breadcrumbsFromParent;
@@ -57,11 +59,17 @@ export function collapseEmptyNodes(contextTree: AnyTree) {
     return branch;
   }
 
-  contextTree.childHeadings = contextTree.childHeadings.map((h) =>
-    recursiveHeadings(h)
-  );
+  // todo: this is a hack
+  contextTree &&
+    (contextTree.childHeadings = contextTree?.childHeadings?.map((h) =>
+      recursiveHeadings(h)
+    ));
 
-  contextTree.childLists = contextTree.childLists.map((l) => recursiveLists(l));
+  // todo: this is a hack
+  contextTree &&
+    (contextTree.childLists = contextTree?.childLists?.map((l) =>
+      recursiveLists(l)
+    ));
 
   return contextTree;
 }

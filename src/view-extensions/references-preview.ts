@@ -8,6 +8,8 @@ let thePlugin: SNWPlugin;
 
 export function setPluginVariableForMarkdownPreviewProcessor(plugin: SNWPlugin) {
     thePlugin = plugin;
+    // @ts-ignore
+    window.thePlugin = plugin;
 }
 
 

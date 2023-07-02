@@ -2,7 +2,7 @@ import { HeadingCache, ListItemCache } from "obsidian";
 import {
     getTextAtPosition,
     getTextFromLineStartToPositionEnd,
-} from "./position-utils";
+} from "./position";
 
 export const chainBreadcrumbs = (lines: string[]) =>
     lines

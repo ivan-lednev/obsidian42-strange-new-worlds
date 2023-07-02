@@ -1,5 +1,5 @@
 import { Pos, SectionCache } from "obsidian";
-import { doesPositionIncludeAnother } from "./position-utils";
+import { doesPositionIncludeAnother } from "./position";
 
 export function getSectionContaining(
   searchedForPosition: Pos,

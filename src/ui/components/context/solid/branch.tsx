@@ -29,7 +29,7 @@ function MatchSection(props: MatchSectionProps) {
     const before = text.substring(0, filterStart);
     const after = text.substring(filterEnd);
 
-    return `${before}==${filter()}==${after}`;
+    return `${before}<mark>${filter()}</mark>${after}`;
   };
 
   return (

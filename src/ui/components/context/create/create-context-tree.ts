@@ -1,23 +1,23 @@
 import { HeadingCache, ListItemCache } from "obsidian";
-import { getTextAtPosition, isSamePosition } from "../util/position-utils";
+import { getTextAtPosition, isSamePosition } from "../util/position";
 import {
   getHeadingBreadcrumbs,
   getHeadingIndexContaining,
-} from "../util/heading-utils";
+} from "../util/heading";
 import {
   getListBreadcrumbs,
   getListItemIndexContaining,
   getListItemWithDescendants,
   isPositionInList,
-} from "../util/list-utils";
+} from "../util/list";
 import {
   createContextTreeProps,
   FileContextTree,
   HeadingContextTree,
   ListContextTree,
 } from "../types";
-import { getFirstSectionUnder, getSectionContaining } from "../util/section-utils";
-import { formatListWithDescendants } from "../util/formatting-utils";
+import { getFirstSectionUnder, getSectionContaining } from "../util/section";
+import { formatListWithDescendants } from "../util/format";
 
 export function createContextTree({
   linksToTarget,

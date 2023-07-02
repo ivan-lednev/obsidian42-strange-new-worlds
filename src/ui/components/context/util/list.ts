@@ -1,5 +1,5 @@
 import { ListItemCache, Pos } from "obsidian";
-import { doesPositionIncludeAnother } from "./position-utils";
+import { doesPositionIncludeAnother } from "./position";
 
 export function getListItemWithDescendants(
   listItemIndex: number,
