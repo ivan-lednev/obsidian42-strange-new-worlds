@@ -1,4 +1,4 @@
-import { createSignal, For } from "solid-js";
+import { createEffect, createSignal, For } from "solid-js";
 import { render } from "solid-js/web";
 import {
   FileContextTree,
@@ -8,9 +8,9 @@ import {
 } from "../types";
 import { Branch } from "./branch";
 import { collapseEmptyNodes } from "../collapse/collapse-empty-nodes";
-import { nothing, produce } from "immer";
+import { produce } from "immer";
 import { searchContextTree } from "../search/search-context-tree";
-import { FilterProvider } from "./search-context";
+import Mark from "mark.js";
 
 export interface AnyTree {
   breadcrumbs?: string[];
@@ -26,6 +26,15 @@ interface TreeProps {
 
 export function Tree(props: TreeProps) {
   const [filter, setFilter] = createSignal("");
+  let markContextRef: HTMLDivElement;
+
+  createEffect(() => {
+    const mark = new Mark(markContextRef);
+
+    mark.unmark({
+      done: () => mark.mark(filter()),
+    });
+  });
 
   return (
     <div class="search-results-children">
@@ -36,7 +45,7 @@ export function Tree(props: TreeProps) {
           onInput={({ currentTarget: { value } }) => setFilter(value)}
         />
       </div>
-      <FilterProvider filter={filter}>
+      <div ref={markContextRef}>
         <For each={props.fileContextTrees}>
           {(tree) => {
             // immer cannot both update a draft and return null, so this is a workaround when all the tree gets
@@ -54,7 +63,7 @@ export function Tree(props: TreeProps) {
             return <Branch contextTree={collapsedTree().tree} />;
           }}
         </For>
-      </FilterProvider>
+      </div>
     </div>
   );
 }

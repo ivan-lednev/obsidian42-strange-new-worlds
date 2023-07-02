@@ -16,7 +16,8 @@
       "ES7"
     ],
     "jsx": "preserve",
-    "jsxImportSource": "solid-js"
+    "jsxImportSource": "solid-js",
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "**/*.ts"
