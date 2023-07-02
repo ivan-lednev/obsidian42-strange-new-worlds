@@ -4,12 +4,14 @@ import {
     getTextFromLineStartToPositionEnd,
 } from "./position";
 
+// todo: remove
 export const chainBreadcrumbs = (lines: string[]) =>
     lines
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .join(" ➤ ");
 
+// todo: remove
 export const formatListBreadcrumbs = (
     fileContents: string,
     breadcrumbs: ListItemCache[]

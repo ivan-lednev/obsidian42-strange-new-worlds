@@ -36,7 +36,7 @@ export function Tree(props: TreeProps) {
     });
 
   return (
-    <>
+    <div class="search-results-children">
       <div class="search-input-container">
         <input
           type="search"
@@ -47,7 +47,7 @@ export function Tree(props: TreeProps) {
       <FilterProvider filter={filter}>
         <Branch contextTree={collapsedTree()} />
       </FilterProvider>
-    </>
+    </div>
   );
 }
 

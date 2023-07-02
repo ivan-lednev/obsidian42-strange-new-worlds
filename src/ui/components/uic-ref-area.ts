@@ -14,7 +14,8 @@ import {
   SectionWithMatch,
 } from "./context/types";
 import { collapseEmptyNodes } from "./context/collapse/collapse-empty-nodes";
-import {renderContextTree} from "./context/solid/tree"
+import { renderContextTree } from "./context/solid/tree";
+import { getUIC_Ref_Title_Div } from "./uic-ref-title";
 
 let thePlugin: SNWPlugin;
 
@@ -22,29 +23,7 @@ export function setPluginVariableUIC_RefArea(plugin: SNWPlugin) {
   thePlugin = plugin;
 }
 
-// export /**
-//  *  Crates the primarhy "AREA" body for displaying refrences. This is the overall wrapper for the title and individaul references
-//  *
-//  * @param {string} refType
-//  * @param {string} key
-//  * @param {string} filePath
-//  * @param {boolean} isHoverView
-//  * @return {*}  {Promise<string>}
-//  */
-// const getUIC_Ref_Area = async (refType: string, realLink: string, key: string, filePath: string, lineNu: number, isHoverView:boolean): Promise<HTMLElement> => {
-//     const refAreaItems = await getRefAreaItems(refType, key, filePath);
-//     const refAreaContainerEl = createDiv();
-//
-//     //get title header for this reference area
-//     refAreaContainerEl.append(await getUIC_Ref_Title_Div(refType, realLink, key, filePath, refAreaItems.refCount, lineNu, isHoverView, thePlugin));
-//
-//     const refAreaEl = createDiv({cls: "snw-ref-area"});
-//     refAreaEl.append(refAreaItems.response)
-//     refAreaContainerEl.append(refAreaEl)
-//
-//     return refAreaContainerEl;
-// }
-
+// todo: remove this old code
 export const getUIC_Ref_Area = async (
   refType: string,
   realLink: string,
@@ -53,68 +32,83 @@ export const getUIC_Ref_Area = async (
   lineNu: number,
   isHoverView: boolean
 ): Promise<HTMLElement> => {
-  return createDiv({}, async (el) => {
-    // todo: don't use active file, use filepath
-    const activeFile = thePlugin.app.workspace.getActiveFile();
+  const refAreaItems = await getRefAreaItems(refType, key, filePath);
+  const refAreaContainerEl = createDiv();
 
-    // todo: clean this up. This should probably be inside solid
-    el.createDiv({ cls: "search-results-children" }, async (el) => {
-      const backlinks =
-        // @ts-ignore
-        thePlugin.app.metadataCache.getBacklinksForFile(activeFile)?.data;
+  refAreaContainerEl.append(
+    await getUIC_Ref_Title_Div(
+      refType,
+      realLink,
+      key,
+      filePath,
+      refAreaItems.refCount,
+      lineNu,
+      isHoverView,
+      thePlugin
+    )
+  );
 
-      for (const [path, linksToTarget] of Object.entries(backlinks)) {
-        const inlinkingFile = thePlugin.app.metadataCache.getFirstLinkpathDest(
-          path,
-          "/"
-        );
+  const refAreaEl = createDiv({ cls: "snw-ref-area" });
+  refAreaEl.append(refAreaItems.response);
+  refAreaContainerEl.append(refAreaEl);
 
-        if (!inlinkingFile) {
-          continue;
-        }
-
-        const inlinkingFileContents = await thePlugin.app.vault.cachedRead(
-          inlinkingFile
-        );
-
-        // @ts-ignore
-        const contextTree = createContextTree({
-          fileName: path,
-          fileContents: inlinkingFileContents,
-          // @ts-ignore
-          linksToTarget,
-          ...thePlugin.app.metadataCache.getFileCache(inlinkingFile),
-        });
-
-        // collapseEmptyNodes(contextTree);
-        renderContextTree(el, contextTree)
-        // displayContextTreeForFile(el, contextTree);
-      }
-    });
-  });
+  return refAreaContainerEl;
 };
 
-/**
- * Creates a DIV for a colection of reference blocks to be displayed
- *
- * @param {string} refType
- * @param {string} key
- * @param {string} filePath
- * @return {*}  {Promise<{response: string, refCount: number}>}
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getRefAreaItems = async (
+export const mountContextTree = async (
   refType: string,
+  realLink: string,
   key: string,
-  filePath: string
-): Promise<{
-  response: HTMLElement;
-  refCount: number;
-}> => {
+  filePath: string,
+  lineNu: number,
+  isHoverView: boolean,
+  el: HTMLDivElement
+) => {
+  // todo: don't use active file, use filepath
+
+  const { countOfRefs, linksToLoop, uniqueFileKeys, maxItemsToShow } = await extracted(refType, filePath, key);
+  console.log({ countOfRefs, linksToLoop, uniqueFileKeys, maxItemsToShow })
+
+  const activeFile = thePlugin.app.workspace.getActiveFile();
+
+  const backlinks =
+    // @ts-ignore
+    thePlugin.app.metadataCache.getBacklinksForFile(activeFile)?.data;
+
+  for (const [path, linksToTarget] of Object.entries(backlinks)) {
+    const inlinkingFile = thePlugin.app.metadataCache.getFirstLinkpathDest(
+      path,
+      "/"
+    );
+
+    if (!inlinkingFile) {
+      continue;
+    }
+
+    const inlinkingFileContents = await thePlugin.app.vault.cachedRead(
+      inlinkingFile
+    );
+
+    // @ts-ignore
+    const contextTree = createContextTree({
+      fileName: path,
+      fileContents: inlinkingFileContents,
+      // @ts-ignore
+      linksToTarget,
+      ...thePlugin.app.metadataCache.getFileCache(inlinkingFile),
+    });
+
+    // collapseEmptyNodes(contextTree);
+    renderContextTree(el, contextTree);
+    // displayContextTreeForFile(el, contextTree);
+  }
+};
+
+async function extracted(linkType: string, filePath: string, key: string) {
   let countOfRefs = 0;
   let linksToLoop: Link[] = null;
 
-  if (refType === "File") {
+  if (linkType === "File") {
     const allLinks: Link[] = getSnwAllLinksResolutions();
     const incomingLinks = allLinks.filter((f) => {
       if (!f?.resolvedFile) return false;
@@ -138,8 +132,6 @@ const getRefAreaItems = async (
     return linksToLoop.find((a) => a.sourceFile.path === file_path);
   });
 
-  const wrapperEl = createDiv();
-
   let maxItemsToShow = uniqueFileKeys.length;
 
   if (
@@ -147,6 +139,32 @@ const getRefAreaItems = async (
     maxItemsToShow >= thePlugin.settings.maxFileCountToDisplay
   )
     maxItemsToShow = thePlugin.settings.maxFileCountToDisplay;
+  return { countOfRefs, linksToLoop, uniqueFileKeys, maxItemsToShow };
+}
+
+/**
+ * Creates a DIV for a colection of reference blocks to be displayed
+ *
+ * @param {string} refType
+ * @param {string} key
+ * @param {string} filePath
+ * @return {*}  {Promise<{response: string, refCount: number}>}
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getRefAreaItems = async (
+  refType: string,
+  key: string,
+  filePath: string
+): Promise<{
+  response: HTMLElement;
+  refCount: number;
+}> => {
+  const { countOfRefs, linksToLoop, uniqueFileKeys, maxItemsToShow } =
+    await extracted(refType, filePath, key);
+
+  // todo: separate this from view code
+
+  const wrapperEl = createDiv();
 
   for (let index = 0; index < maxItemsToShow; index++) {
     const file_path = uniqueFileKeys[index];

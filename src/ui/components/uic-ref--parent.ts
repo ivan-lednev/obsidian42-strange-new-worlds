@@ -2,7 +2,7 @@ import { Keymap, MarkdownView } from 'obsidian';
 import SNWPlugin from 'src/main';
 import { Instance, ReferenceElement } from 'tippy.js';
 import { scrollResultsIntoView } from 'src/utils';
-import { getUIC_Ref_Area } from "./uic-ref-area";
+import { mountContextTree } from "./uic-ref-area";
 import { setPluginVariableUIC_RefItem } from './uic-ref-item';
 
 let thePlugin: SNWPlugin = null;
@@ -23,7 +23,8 @@ export const getUIC_Hoverview = async (instance: Instance)=>{
     const popoverEl = createDiv();
     popoverEl.addClass("snw-popover-container");
     popoverEl.addClass("search-result-container")
-    popoverEl.appendChild( await getUIC_Ref_Area(refType, realLink, key, filePath, lineNu, true));
+    // todo: reimplement
+    // popoverEl.appendChild( await mountContextTree(refType, realLink, key, filePath, lineNu, true));
     instance.setContent(popoverEl);
     setTimeout( async () => {
         await setFileLinkHandlers(false, popoverEl);
@@ -45,11 +46,13 @@ const getUIC_SidePane = async (refType: string, realLink: string, key: string, f
     console.log({refType, realLink, key, filePath, lineNu})
     sidepaneEL.addClass("snw-sidepane-container");
     sidepaneEL.addClass("search-result-container");
-    sidepaneEL.append( (await getUIC_Ref_Area(refType, realLink, key, filePath, lineNu, false)) )
+    const mountingPoint = sidepaneEL.createDiv()
+    await mountContextTree(refType, realLink, key, filePath, lineNu, false, mountingPoint)
 
-    setTimeout( async () => {
-        await setFileLinkHandlers(false, sidepaneEL);
-    }, 500);
+    // todo: reimplement
+    // setTimeout( async () => {
+    //     await setFileLinkHandlers(false, sidepaneEL);
+    // }, 500);
 
     return sidepaneEL
 }
