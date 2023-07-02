@@ -79,21 +79,24 @@ export const mountContextTree = async (
     return acc;
   }, {});
 
-  for (const [path, { links, file }] of Object.entries(filesWithLinks)) {
-    // todo: use Promise.all
-    const resolvedFileContents = await thePlugin.app.vault.cachedRead(file);
-    const fileCache = thePlugin.app.metadataCache.getFileCache(file);
+  const trees = await Promise.all(
+    Object.entries(filesWithLinks).map(async ([path, { links, file }]) => {
+      // todo: use Promise.all
+      const resolvedFileContents = await thePlugin.app.vault.cachedRead(file);
+      const fileCache = thePlugin.app.metadataCache.getFileCache(file);
 
-    // @ts-ignore
-    const contextTree = createContextTree({
-      fileName: path,
-      fileContents: resolvedFileContents,
-      linksToTarget: links,
-      ...fileCache,
-    });
+      // todo: remove
+      // @ts-ignore
+      return createContextTree({
+        fileName: path,
+        fileContents: resolvedFileContents,
+        linksToTarget: links,
+        ...fileCache,
+      });
+    })
+  );
 
-    renderContextTree(el, contextTree);
-  }
+  renderContextTree(el, trees);
 };
 
 async function getIncomingLinks(

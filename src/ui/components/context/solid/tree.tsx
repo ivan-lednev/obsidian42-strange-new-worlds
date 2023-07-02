@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { render } from "solid-js/web";
 import {
   FileContextTree,
@@ -21,19 +21,11 @@ export interface AnyTree {
 }
 
 interface TreeProps {
-  contextTree: AnyTree;
+  fileContextTrees: AnyTree[];
 }
 
 export function Tree(props: TreeProps) {
   const [filter, setFilter] = createSignal("");
-
-  const collapsedTree = () =>
-    produce(props.contextTree, (draft) => {
-      if (filter()) {
-        draft = searchContextTree(draft, filter());
-      }
-      collapseEmptyNodes(draft);
-    });
 
   return (
     <div class="search-results-children">
@@ -45,7 +37,19 @@ export function Tree(props: TreeProps) {
         />
       </div>
       <FilterProvider filter={filter}>
-        <Branch contextTree={collapsedTree()} />
+        <For each={props.fileContextTrees}>
+          {(tree) => {
+            const collapsedTree = () =>
+              produce(tree, (draft) => {
+                if (filter()) {
+                  draft = searchContextTree(draft, filter());
+                }
+                collapseEmptyNodes(draft);
+              });
+
+            return <Branch contextTree={collapsedTree()} />;
+          }}
+        </For>
       </FilterProvider>
     </div>
   );
@@ -53,7 +57,7 @@ export function Tree(props: TreeProps) {
 
 export function renderContextTree(
   el: HTMLDivElement,
-  contextTree: FileContextTree
+  contextTrees: FileContextTree[]
 ) {
-  render(() => <Tree contextTree={contextTree} />, el);
+  render(() => <Tree fileContextTrees={contextTrees} />, el);
 }
