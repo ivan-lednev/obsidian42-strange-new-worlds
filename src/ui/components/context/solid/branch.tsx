@@ -1,68 +1,10 @@
-import { createSignal, For, Index, Match, Show, Switch } from "solid-js";
-import { render } from "solid-js/web";
-import {
-  FileContextTree,
-  HeadingContextTree,
-  ListContextTree,
-  SectionWithMatch,
-} from "./types";
+import { createSignal, For, Show } from "solid-js";
+import { SectionWithMatch } from "../types";
 import { MarkdownRenderer } from "obsidian";
-
-export interface AnyTree {
-  breadcrumbs?: string[];
-  text: string;
-  sectionsWithMatches: SectionWithMatch[];
-  childLists?: ListContextTree[];
-  childHeadings?: HeadingContextTree[];
-}
-
-function CollapseIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="svg-icon right-triangle"
-    >
-      <path d="M3 8L12 17L21 8"></path>
-    </svg>
-  );
-}
-
-interface TitleProps {
-  breadcrumbs: string[];
-  type?: "list" | "heading";
-}
-
-function Title(props: TitleProps) {
-  // todo: clean this up. It can be shorter
-  return (
-    <Index each={props.breadcrumbs}>
-      {(breadcrumb, i) => (
-        <Switch fallback={<div>🗋 {breadcrumb()}</div>}>
-          <Match when={props.type === "list"}>
-            <div class="snw-breadcrumb-container">
-              <div class="snw-breadcrumb-token">{i === 0 ? "•" : "↳"}</div>
-              <div>{breadcrumb().trim().replace(/^-\s+/, "")}</div>
-            </div>
-          </Match>
-          <Match when={props.type === "heading"}>
-            <div class="snw-breadcrumb-container">
-              <div class="snw-breadcrumb-token">{i === 0 ? "§" : "↳"}</div>
-              <div>{breadcrumb()}</div>
-            </div>
-          </Match>
-        </Switch>
-      )}
-    </Index>
-  );
-}
+import { AnyTree } from "./solid-sandbox";
+import { CollapseIcon } from "./collapse-icon";
+import { Title } from "./title";
+import { useFilterContext } from "./search-context";
 
 interface MatchSectionProps {
   sectionsWithMatches: SectionWithMatch[];
@@ -100,7 +42,7 @@ interface BranchProps {
   type?: "list" | "heading";
 }
 
-function Branch(props: BranchProps) {
+export function Branch(props: BranchProps) {
   const [childrenShown, setChildrenShown] = createSignal(true);
 
   const breadcrumbs = props.contextTree.breadcrumbs
@@ -137,11 +79,4 @@ function Branch(props: BranchProps) {
       </Show>
     </div>
   );
-}
-
-export function renderContextTree(
-  el: HTMLDivElement,
-  contextTree: FileContextTree
-) {
-  render(() => <Branch contextTree={contextTree} />, el);
 }

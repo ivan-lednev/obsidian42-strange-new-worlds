@@ -1,6 +1,7 @@
-import { FileContextTree, HeadingContextTree, ListContextTree } from "./types";
+import { HeadingContextTree, ListContextTree } from "./types";
+import {AnyTree} from "./solid/tree";
 
-export function collapseEmptyNodes(contextTree: FileContextTree) {
+export function collapseEmptyNodes(contextTree: AnyTree) {
   function recursiveHeadings(
     branch: HeadingContextTree,
     breadcrumbsFromParent?: string[]
