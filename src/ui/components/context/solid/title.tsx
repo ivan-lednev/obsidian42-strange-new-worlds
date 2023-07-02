@@ -42,7 +42,7 @@ export function Title(props: TitleProps) {
   return (
     <Index each={props.breadcrumbs}>
       {(breadcrumb, i) => (
-        <Switch fallback={<div>🗋 {addHighlight(breadcrumb())}</div>}>
+        <Switch fallback={<div>🗋 {addHighlight(breadcrumb().replace(/\.md$/, ""))}</div>}>
           <Match when={props.type === "list"}>
             <div class="snw-breadcrumb-container">
               <div class="snw-breadcrumb-token">{i === 0 ? "•" : "↳"}</div>

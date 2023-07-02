@@ -8,7 +8,7 @@ import {
 } from "../types";
 import { Branch } from "./branch";
 import { collapseEmptyNodes } from "../collapse/collapse-empty-nodes";
-import { produce } from "immer";
+import { nothing, produce } from "immer";
 import { searchContextTree } from "../search/search-context-tree";
 import { FilterProvider } from "./search-context";
 
@@ -39,15 +39,19 @@ export function Tree(props: TreeProps) {
       <FilterProvider filter={filter}>
         <For each={props.fileContextTrees}>
           {(tree) => {
+            // immer cannot both update a draft and return null, so this is a workaround when all the tree gets
+            // filtered out.
+            const ref = { tree };
+
             const collapsedTree = () =>
-              produce(tree, (draft) => {
+              produce(ref, (draft) => {
                 if (filter()) {
-                  draft = searchContextTree(draft, filter());
+                  draft.tree = searchContextTree(draft.tree, filter());
                 }
-                collapseEmptyNodes(draft);
+                collapseEmptyNodes(draft.tree);
               });
 
-            return <Branch contextTree={collapsedTree()} />;
+            return <Branch contextTree={collapsedTree().tree} />;
           }}
         </For>
       </FilterProvider>

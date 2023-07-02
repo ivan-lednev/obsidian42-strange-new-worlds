@@ -70,6 +70,5 @@ export function collapseEmptyNodes(contextTree: AnyTree) {
     (contextTree.childLists = contextTree?.childLists?.map((l) =>
       recursiveLists(l)
     ));
-
   return contextTree;
 }
