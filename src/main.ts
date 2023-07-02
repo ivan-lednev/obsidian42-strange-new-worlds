@@ -166,7 +166,6 @@ export default class SNWPlugin extends Plugin {
             const lineNu = 0
 
             embeddedBacklinksEl.replaceChildren(await getUIC_SidePane(refType, realLink, key, filePath, lineNu))
-            embeddedBacklinksEl.create
         })
 
     }
